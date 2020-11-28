@@ -4,7 +4,7 @@ with open("README.md","r") as f:
     long_description = f.read()
 setuptools.setup(
     name='strato-dyndns',
-    version='1.0.3',
+    version='1.0.4',
     scripts = ['strato-dyndns/strato-dyndns'],
     packages=setuptools.find_packages() ,
     url='https://github.com/regmibijay/strato-dyndns',
