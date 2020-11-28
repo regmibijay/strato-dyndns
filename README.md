@@ -1,6 +1,6 @@
 # Strato-DynDNS
 
-Strato-DynDNS updates your websites DNS records on Strato Servers. 
+Strato-DynDNS updates your website's DNS records on Strato Servers. 
 
 ## Disclaimer
 
@@ -9,7 +9,7 @@ Strato-DynDNS updates your websites DNS records on Strato Servers.
 
 ## Installation
 
-To install this tool, please download a suited version for your operating system from [releases](https://github.com/regmibijay/strato-dyndns/releases) page of this website. If you want pip package, you can install it via pip:
+To install this tool, please download a suited version for your operating system from [releases](https://github.com/regmibijay/strato-dyndns/releases) page of this website. Alternatively, you can install it via pip:
 ```$ pip3 install strato-dyndns```
 
 ## Usage:
