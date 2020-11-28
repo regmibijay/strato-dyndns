@@ -1,0 +1,235 @@
+#!/usr/bin/env python3
+
+import subprocess, os, sys, json
+from argparse import ArgumentParser
+from getpass import getpass
+
+def msgshow(msg,exit = 0):
+    if not ARG.quiet is True: #if silent mode is set, script doesn't output
+        print(msg)
+    if exit: #if exit option is set, script exits after showing message
+        exit()
+def getIP():
+    host_url = "https://regdelivery.de/ip-api.php" #default host to fetch IP
+    ip = [""]
+    if ARG.v4:
+        curl_opts_4 = ["curl","-4", "-s", host_url] #curl sending IPv4 req to API server.
+        try:
+            msgshow("Fetching IPV4 from cloud API server.")
+            curl_output_4 =  str(subprocess.check_output(curl_opts_4),"utf-8")
+        except subprocess.CalledProcessError: #throwing error if curl can not fetch ip
+            print("cURL threw an exception. It could mean either it is not installed or it could not establish a connection to IP API server.")
+            print("Please make sure you have an active internet connection.")
+            print("Error: API_FETCH_ERROR_4")
+            exit() 
+        msgshow("Got IPv4 successfully. [" + curl_output_4 + "]")
+        ip.append(curl_output_4) #appending ipv4 to output array
+    if ARG.v6:
+        curl_opts_6 = ["curl","-6", "-s", host_url] #curl sending IPv4 req to API server.
+        try:
+            msgshow("Fetching IPV6 from cloud API server.")
+            curl_output_6 =  str(subprocess.check_output(curl_opts_6),"utf-8")
+        except subprocess.CalledProcessError: #throwing error if curl can not fetch ip
+            print("cURL threw an exception. It could mean either it is not installed or it could not establish a connection to IP API server.")
+            print("Please make sure you have an active internet connection.")
+            print("Error: API_FETCH_ERROR_6")
+            exit()
+        msgshow("Got IPV6 successfully. [" + curl_output_6 + "]")
+        ip.append(curl_output_6) #appending ipv6 to output array
+    return ip[1:]
+
+def readConfig(url):
+    global CONFIG_URL
+    pars = ""
+    try: #reading config file
+        with open(url, "r") as  f:
+            pars_json = json.load(f)
+    except OSError: #throws error if config file could not be read
+        print("Could not read config file @ " + CONFIG_URL)
+        print("Error: FILE_READ_ERROR")
+        exit()
+    except json.JSONDecodeError: #throws error if file was not in JSON format
+        print("Error parsing config file @ " + CONFIG_URL)
+        print ("Check if file format is conform to this script's requirement.")
+        print("Error: JSON_DECODE_ERROR")
+        exit()
+    except PermissionError: #checking if config file is accessible to read
+        print("Could not read config file @ " + CONFIG_URL)
+        print("Error: PERMISSION_ERROR")
+        exit() 
+    try: #checking if required parameters exist
+        if not pars_json['username'] or not pars_json['password'] or not pars_json['domain']:
+            pass
+    except KeyError: #throwing error if critical keys do not exist
+        print("Error parsing parameters from config file @ " + CONFIG_URL)
+        print ("Check if file syntax is conform to this script's requirement.")
+        print("Error: PARAMETER_PARSE_ERROR")
+        exit()
+    return pars_json
+def analyzeCurlOutput(output):
+    #contains list of possible server responses, source: https://help.dyn.com/remote-access-api/return-codes/
+    server_response_list = { 
+        "good"  : "IP update completed successfully, new ip was successfully written to DNS records.",
+        "nochg" : "IP update completed successfully, yet no changes were made.",
+        "notfqdn" : "The hostname specified is not a fully-qualified domain name (not in the form hostname.dyndns.org or domain.com).",
+        "nohost" : "The hostname specified does not exist in this user account (or is not in the service specified in the system parameter).",
+        "numhost" : "Too many hosts (more than 20) specified in an update. Also returned if trying to update a round robin (which is not allowed).",
+        "abuse" : "The hostname specified is blocked for update abuse.",
+        "badagent" : "The user agent was not sent or HTTP method is not permitted (we recommend use of GET request method).",
+        "dnserr"   : "DNS error encountered.",
+        "911" : "There is a problem or scheduled maintainance on Strato's Servers."                    
+      }
+    try:
+        output = output.split(" ")[0] #Splitting output from update request.
+        msgshow(server_response_list[output])
+    except:
+        print("Error occured while trying to parse output from the update server.")
+        print("The request has already been sent.")
+        print("Server sent : ")
+        print(output)
+    return True
+def createDnsUpdateRequest(username, password, hostname, ipv4 = "", ipv6 = ""): #updates the dns record finally
+    updateURL = ""
+    if ipv4 and ipv6:
+        updateURL = "https://" + username + ":" + password+ "@dyndns.strato.com/nic/update?hostname="+ hostname + "&myip=" + ipv4 + "," + ipv6
+        showURL = "https://" + username + ":***********@dyndns.strato.com/nic/update?hostname="+ hostname + "&myip=" + ipv4 + "," + ipv6
+    if not ipv4:
+        updateURL = "https://" + username + ":" + password + "@dyndns.strato.com/nic/update?hostname=" + hostname + "&myip=" + ipv6
+        showURL = "https://" + username + ":***********@dyndns.strato.com/nic/update?hostname="+ hostname + "&myip=" + ipv6
+    if not ipv6:
+        updateURL = "https://" + username + ":" + password + "@dyndns.strato.com/nic/update?hostname=" + hostname + "&myip=" + ipv4
+        showURL = "https://" + username + ":***********@dyndns.strato.com/nic/update?hostname="+ hostname + "&myip=" + ipv4
+    try:
+            if ARG.secure:
+                msgshow("Hitting: " + showURL)
+            if not ARG.secure:
+                msgshow("Hitting: " + updateURL)
+            curl_dns_array = ["curl", "-s", updateURL] 
+            curl_dns_output =  str(subprocess.check_output(curl_dns_array),"utf-8") #sending curl request to Strato Servers
+    except subprocess.CalledProcessError: #throwing error if curl can not fetch ip
+            print("Script encountered a problem. It could mean either cURL is not installed or it could not establish a connection to Strato DynDNS server.")
+            print("Please make sure you have an active internet connection.")
+            print("Error: CURL_DNS_REQ_NOT_POSSIBLE_1") 
+            exit() 
+    except:
+        print("Script encountered a problem while sending update request to server.")
+        print("Error: CURL_DNS_REQ_NOT_POSSIBLE_2")    
+    analyzeCurlOutput(curl_dns_output)
+    return True
+def generateConf():
+    data = {}
+    data['username'] = []
+    data['password'] = []
+    data['domain'] = []
+    username = input("Enter username for your domain, if you are trying to update subdomain records, username is mostly main domain. [FQDN]: ")
+    password = getpass("Password for record update: ")
+    domain = input("Domain or subdomain to be updated.[FQDN]: ")
+    name = input("Configuration file name [Must end with .conf, e.g. config.conf]: ")
+    path = input("Where do you want the file to be stored?(. for current folder): ")
+    
+    #processing input to create json file
+    data['username'] = username
+    data['password'] = password
+    data['domain'] = domain
+
+    save_url = os.path.join(path,name) #creating final file name
+    try:
+        with open(save_url, "w") as conf_file:
+            json.dump(data,conf_file) #writing json data
+        msgshow("Created a conf file successfully.")
+        decs = input("Input n to --> EXIT <--- if you just wanted to create a config file. ")
+        if decs == "n":
+            exit()
+        decs = input("Do you want to use this config file now? [y/n] ")
+        if decs == "y":
+             global CONFIG_URL
+             CONFIG_URL = save_url   
+    except OSError:
+        msgshow("Could not write to config file, no file was generated.")
+    
+
+def main(argv):
+    
+    # Adding command line arguments
+    parser = ArgumentParser()
+    parser.add_argument("--input", "-i", help = "Input a config file, configuration format found in https://github.com/regmibijay/strato-dyndns")
+    parser.add_argument("-v4", help = "Update IPV4", const=True, nargs = '?')
+    parser.add_argument("-v6", help="Update IPV6", const=True, nargs = '?')
+    parser.add_argument("--config", "-c", help = "Create a configuration file containing your authentification data", const = True, nargs ='?')
+    parser.add_argument("--quiet","-q", help = "Program operates silently", const = True, nargs ='?')
+    parser.add_argument("--version","-v", help="Shows the version number of this tool." , const = True, nargs = '?')
+    parser.add_argument("--secure","-s", help="Hides the password in logs and console texts.", const = True, nargs = '?')
+    arg = parser.parse_args()
+
+    #making args global so all functions can acess them
+    global ARG
+    global CONFIG_URL
+    ARG = arg
+    CONFIG_URL = "config.conf"
+    # showing greeting
+    msgshow("Strato DynDNS Client, V1.0")
+    msgshow("Made with love by Bijay Regmi. ")
+    msgshow("Contributions and feedback welcome @ https://github.com/regmibijay/strato-dyndns")
+    #checking what arguments user specified:
+    if arg.version:
+        exit()
+    if arg.input:
+        msgshow("Using " + arg.input + " as input file.")
+        CONFIG_URL = arg.input
+    if arg.v4:
+        msgshow("IPV4 will be determined and updated")
+    if arg.v6:
+        msgshow("IPV6 will be determined and updated")
+    if arg.config:
+        msgshow("Configuration wizard will be ran to generate a config file.")   
+    if arg.secure:
+       msgshow("Password will be hidden from logs.") 
+    msgshow("_________________________")
+    #checking if user wants to create a new config file
+    if arg.config:
+        msgshow("Press Ctrl + c to exit config generation wizard.")
+        try:
+            generateConf()
+        except KeyboardInterrupt:
+            msgshow("\r\nOk, then no config file will be generated. Press Ctrl+c again  if you meant to exit this script.")
+    #cross checking these arguments if contradict each other
+    if not arg.v4 and not arg.v6: #if none of ip are set, script exits
+        print("Please specify at least one IP address type with either -v4 or -v6 to update.")
+        exit()
+    if arg.input and not os.path.exists(arg.input):
+        print("Specified config file does not exit, please verify and try again")
+        exit()
+    msgshow("_________________________")
+
+    ip = getIP() #call to IP fetch function
+    msgshow("_________________________")
+
+    #reading parameters from config file
+    msgshow("Reading config file " + CONFIG_URL)
+    parameters = readConfig(CONFIG_URL)
+    msgshow("Domain Name:" + parameters['domain'])
+    msgshow("Username: " + parameters['username'])
+    if not arg.secure: #removing password if secure flag is set
+        msgshow("Password: " + parameters['password'])
+    if arg.secure:
+        msgshow("Password: "+ "********")
+    #creating Update request now
+    ipv4 = ""
+    ipv6 = ""
+    if arg.v6 and arg.v4:
+        ipv4 = ip[0]
+        ipv6 = ip[1]
+    if not arg.v6:
+        ipv4 = ip[0]
+    if not arg.v4:
+        ipv6 = ip[0]
+    msgshow("_________________________")
+    try: #createDnsUpdateRequest(username, password, hostname,ipv4 = "",ipv6 = "")
+        createDnsUpdateRequest(username = parameters['username'], password = parameters['password'], hostname = parameters['domain'], ipv4 = ipv4,ipv6 = ipv6)    
+        msgshow("_________________________")
+    except :
+        print("could not create request")
+        msgshow("_________________________")
+if __name__ == "__main__":
+   ## if this file is ran from bash, main function is called.
+    main(sys.argv[1:])
