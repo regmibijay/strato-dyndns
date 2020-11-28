@@ -69,6 +69,7 @@ def readConfig(url):
 def analyzeCurlOutput(output):
     #contains list of possible server responses, source: https://help.dyn.com/remote-access-api/return-codes/
     server_response_list = { 
+        "badauth" : "Server stated authentification data was not correct, please check and try again later.",
         "good"  : "IP update completed successfully, new ip was successfully written to DNS records.",
         "nochg" : "IP update completed successfully, yet no changes were made.",
         "notfqdn" : "The hostname specified is not a fully-qualified domain name (not in the form hostname.dyndns.org or domain.com).",
