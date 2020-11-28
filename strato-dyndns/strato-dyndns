@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 
-import subprocess, os, sys, json
+import subprocess
+import os
+import json
+import sys
 from argparse import ArgumentParser
 from getpass import getpass
+
 
 def msgshow(msg,exit = 0):
     if not ARG.quiet is True: #if silent mode is set, script doesn't output
@@ -35,7 +39,7 @@ def getIP():
             print("Error: API_FETCH_ERROR_6")
             exit()
         msgshow("Got IPV6 successfully. [" + curl_output_6 + "]")
-        ip.append(curl_output_6) #appending ipv6 to output array
+        ip.append(curl_output_6) # appending ipv6 to output array
     return ip[1:]
 
 def readConfig(url):
@@ -53,10 +57,6 @@ def readConfig(url):
         print ("Check if file format is conform to this script's requirement.")
         print("Error: JSON_DECODE_ERROR")
         exit()
-    except PermissionError: #checking if config file is accessible to read
-        print("Could not read config file @ " + CONFIG_URL)
-        print("Error: PERMISSION_ERROR")
-        exit() 
     try: #checking if required parameters exist
         if not pars_json['username'] or not pars_json['password'] or not pars_json['domain']:
             pass

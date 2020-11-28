@@ -4,11 +4,11 @@ with open("README.md","r") as f:
     long_description = f.read()
 setuptools.setup(
     name='strato-dyndns',
-    version='1.0.2',
+    version='1.0.3',
     scripts = ['strato-dyndns/strato-dyndns'],
     packages=setuptools.find_packages() ,
     url='https://github.com/regmibijay/strato-dyndns',
-    license='MIT',
+    license='GNU (GPLv3)',
     long_description = long_description,
     long_description_content_type = "text/markdown",
     author='Bijay Regmi',
