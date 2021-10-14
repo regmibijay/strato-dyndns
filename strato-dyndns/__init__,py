@@ -1,4 +1,2 @@
-from .strato-dyndns import createDnsUpdateRequest()
-from .strato-dyndns import analyzeCurlOutput()
-name = "strato-dyndns"
-__version__ = "1.0.0"
+from .strato-dyndns import createDnsUpdateRequest
+from .strato-dyndns import analyzeCurlOutput
