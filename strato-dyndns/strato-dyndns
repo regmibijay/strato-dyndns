@@ -9,59 +9,78 @@ from getpass import getpass
 
 
 def msgshow(msg, exit=False):
-    if not ARG.quiet is True:  # if silent mode is set, script doesn't output
+    if not ARG.quiet:
+        # if silent mode is set, script doesn't output
         print(msg)
-    if exit:  # if exit option is set, script exits after showing message
+    if exit:
+        # if exit option is set, script exits after showing message
         exit()
 
 
 def getIP():
     host_url = "https://regdelivery.de/ip-api.php"  # default host to fetch IP
-    ip = [""]
+    ip = []
     if ARG.v4:
-        curl_opts_4 = [
-            "curl",
-            "-4",
-            "-s",
-            host_url,
-        ]  # curl sending IPv4 req to API server.
-        try:
-            msgshow("Fetching IPV4 from cloud API server.")
-            curl_output_4 = str(subprocess.check_output(curl_opts_4), "utf-8")
-        except subprocess.CalledProcessError:  # throwing error if curl can not fetch ip
-            print(
-                "cURL threw an exception. It could mean either it is not installed or it could not establish a connection to IP API server."
-            )
-            print("Please make sure you have an active internet connection.")
-            print("Error: API_FETCH_ERROR_4")
-            exit()
-        msgshow("Got IPv4 successfully. [" + curl_output_4 + "]")
-        ip.append(curl_output_4)  # appending ipv4 to output array
+        if "." not in str(ARG.v4):
+            curl_opts_4 = [
+                "curl",
+                "-4",
+                "-s",
+                host_url,
+            ]  # curl sending IPv4 req to API server.
+            try:
+                msgshow("Fetching IPV4 from cloud API server.")
+                curl_output_4 = str(subprocess.check_output(curl_opts_4), "utf-8")
+            except subprocess.CalledProcessError:
+                # throwing error if curl can not fetch ip
+                print(
+                    """
+                    cURL threw an exception. It could mean either it is not
+                    installed or it could not establish a connection to IP
+                    API server.
+                    """
+                )
+                print("Please make sure you have an active internet connection.")
+                print("Error: API_FETCH_ERROR_4")
+                exit()
+            msgshow("Got IPv4 successfully. [" + curl_output_4 + "]")
+            ip.append(curl_output_4)  # appending ipv4 to output array
+        else:
+            msgshow(f"Taking v4 {ARG.v4}")
+            ip.append(ARG.v4)
     if ARG.v6:
-        curl_opts_6 = [
-            "curl",
-            "-6",
-            "-s",
-            host_url,
-        ]  # curl sending IPv4 req to API server.
-        try:
-            msgshow("Fetching IPV6 from cloud API server.")
-            curl_output_6 = str(subprocess.check_output(curl_opts_6), "utf-8")
-        except subprocess.CalledProcessError:  # throwing error if curl can not fetch ip
-            print(
-                "cURL threw an exception. It could mean either it is not installed or it could not establish a connection to IP API server."
-            )
-            print("Please make sure you have an active internet connection.")
-            print("Error: API_FETCH_ERROR_6")
-            exit()
-        msgshow("Got IPV6 successfully. [" + curl_output_6 + "]")
-        ip.append(curl_output_6)  # appending ipv6 to output array
-    return ip[1:]
+        if ":" not in str(ARG.v6):
+            curl_opts_6 = [
+                "curl",
+                "-6",
+                "-s",
+                host_url,
+            ]
+            # curl sending IPv4 req to API server.
+            try:
+                msgshow("Fetching IPV6 from cloud API server.")
+                curl_output_6 = str(subprocess.check_output(curl_opts_6), "utf-8")
+            except subprocess.CalledProcessError:
+                # throwing error if curl can not fetch ip
+                print(
+                    """
+                    cURL threw an exception. It could mean either it is not
+                    installed or it could not establish a connection to IP
+                    API server.
+                    """
+                )
+                print("Please make sure you have an active internet connection.")
+                print("Error: API_FETCH_ERROR_6")
+                exit()
+            msgshow("Got IPV6 successfully. [" + curl_output_6 + "]")
+            ip.append(curl_output_6)  # appending ipv6 to output array
+        else:
+            ip.append(ARG.v6)
+    return ip
 
 
 def readConfig(url):
     global CONFIG_URL
-    pars = ""
     try:  # reading config file
         with open(url, "r") as f:
             pars_json = json.load(f)
@@ -74,14 +93,8 @@ def readConfig(url):
         print("Check if file format is conform to this script's requirement.")
         print("Error: JSON_DECODE_ERROR")
         exit()
-    try:  # checking if required parameters exist
-        if (
-            not pars_json["username"]
-            or not pars_json["password"]
-            or not pars_json["domain"]
-        ):
-            pass
-    except KeyError:  # throwing error if critical keys do not exist
+    req_keys = ["username", "password", "domain"]
+    if list(pars_json.keys()) != req_keys:
         print("Error parsing parameters from config file @ " + CONFIG_URL)
         print("Check if file syntax is conform to this script's requirement.")
         print("Error: PARAMETER_PARSE_ERROR")
@@ -90,7 +103,8 @@ def readConfig(url):
 
 
 def analyzeCurlOutput(output):
-    # contains list of possible server responses, source: https://help.dyn.com/remote-access-api/return-codes/
+    # contains list of possible server responses
+    #  source: https://help.dyn.com/remote-access-api/return-codes/
     server_response_list = {
         "badauth": "Server stated authentification data was not correct, please check and try again later.",
         "good": "IP update completed successfully, new ip was successfully written to DNS records.",
@@ -225,9 +239,7 @@ def generateConf():
         with open(save_url, "w") as conf_file:
             json.dump(data, conf_file)  # writing json data
         msgshow("Created a conf file successfully.")
-        decs = input(
-            "Input n to --> EXIT <--- if you just wanted to create a config file. "
-        )
+        decs = input("Input n to --> EXIT <--- if you just wanted to create a config file. ")
         if decs == "n":
             exit()
         decs = input("Do you want to use this config file now? [y/n] ")
@@ -256,9 +268,7 @@ def main(argv):
         const=True,
         nargs="?",
     )
-    parser.add_argument(
-        "--quiet", "-q", help="Program operates silently", const=True, nargs="?"
-    )
+    parser.add_argument("--quiet", "-q", help="Program operates silently", const=True, nargs="?")
     parser.add_argument(
         "--version",
         "-v",
@@ -283,9 +293,7 @@ def main(argv):
     # showing greeting
     msgshow("Strato DynDNS Client, V1.1")
     msgshow("Made with love by Bijay Regmi. ")
-    msgshow(
-        "Contributions and feedback welcome @ https://github.com/regmibijay/strato-dyndns"
-    )
+    msgshow("Contributions and feedback welcome @ https://github.com/regmibijay/strato-dyndns")
     # checking what arguments user specified:
     if arg.version:
         exit()
@@ -312,9 +320,7 @@ def main(argv):
             )
     # cross checking these arguments if contradict each other
     if not arg.v4 and not arg.v6:  # if none of ip are set, script exits
-        print(
-            "Please specify at least one IP address type with either -v4 or -v6 to update."
-        )
+        print("Please specify at least one IP address type with either -v4 or -v6 to update.")
         exit()
     if arg.input and not os.path.exists(arg.input):
         print("Specified config file does not exit, please verify and try again")
@@ -344,7 +350,7 @@ def main(argv):
     if not arg.v4:
         ipv6 = ip[0]
     msgshow("_________________________")
-    try:  # createDnsUpdateRequest(username, password, hostname,ipv4 = "",ipv6 = "")
+    try:
         createDnsUpdateRequest(
             username=parameters["username"],
             password=parameters["password"],
@@ -353,11 +359,11 @@ def main(argv):
             ipv6=ipv6,
         )
         msgshow("_________________________")
-    except:
+    except Exception:
         print("could not create request")
         msgshow("_________________________")
 
 
 if __name__ == "__main__":
-    ## if this file is ran from bash, main function is called.
+    # if this file is ran from bash, main function is called.
     main(sys.argv[1:])
