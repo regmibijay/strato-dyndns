@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="strato-dyndns",
-    version="1.2.0",
+    version="1.2.1",
     scripts=["strato-dyndns/strato-dyndns"],
     packages=setuptools.find_packages(),
     url="https://github.com/regmibijay/strato-dyndns",
