@@ -46,7 +46,7 @@ def getIP():
             msgshow("Got IPv4 successfully. [" + curl_output_4 + "]")
             ip.append(curl_output_4)  # appending ipv4 to output array
         else:
-            msgshow(f"Taking v4 {ARG.v4}")
+            msgshow(f"Taking v4 [{ARG.v4}]")
             ip.append(ARG.v4)
     if ARG.v6:
         if ":" not in str(ARG.v6):
@@ -75,6 +75,7 @@ def getIP():
             msgshow("Got IPV6 successfully. [" + curl_output_6 + "]")
             ip.append(curl_output_6)  # appending ipv6 to output array
         else:
+            msgshow(f"Taking v6 [{ARG.v6}]")
             ip.append(ARG.v6)
     return ip
 
@@ -291,11 +292,17 @@ def main(argv):
     ARG = arg
     CONFIG_URL = "config.conf"
     # showing greeting
-    msgshow("Strato DynDNS Client, V1.1")
+    msgshow("Strato DynDNS Client")
     msgshow("Made with love by Bijay Regmi. ")
     msgshow("Contributions and feedback welcome @ https://github.com/regmibijay/strato-dyndns")
     # checking what arguments user specified:
     if arg.version:
+        print(
+            """
+        For script version, do \n
+        pip show strato-dyndns
+        """
+        )
         exit()
     if arg.input:
         msgshow("Using " + arg.input + " as input file.")
