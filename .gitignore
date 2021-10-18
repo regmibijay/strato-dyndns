@@ -131,3 +131,4 @@ dmypy.json
 #config.conf development data
 config*.conf
 config.conf
+config.json
