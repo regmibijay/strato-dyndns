@@ -3,11 +3,12 @@ from ..schema import StratoSchema
 
 class StratoClient:
     """
-    Client class for Strato DynDNS
+    Client class for Strato DynDNS. For DynDNS operations,
+    DynDNSClient class is encouraged.
     """
 
     UPDATE_URL: str
-    INIT: list[bool]
+    INIT: list
 
     def __init__(self) -> None:
         self.UPDATE_URL = StratoSchema.UPDATE_URL
