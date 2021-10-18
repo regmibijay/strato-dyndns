@@ -1,6 +1,35 @@
 from ..schema import StratoSchema
 
 
+class StratoClientInitError(Exception):
+    """Exception class for initialization error"""
+
+    def __init__(self, message):
+        super().__init__(message)
+
+
+class StratoClientInitData:
+    """
+    Provides set of init data for strato client backend.
+    """
+
+    username: str
+    password: str
+    domain: str
+    ip_addresses: list
+    _valid_fields = ["username", "password", "domain", "ip_addresses"]
+
+    def __init__(self, data):
+        if not all([True for key in self._valid_fields if key in data.keys()]):
+            raise StratoClientInitError(
+                f"Invalid data received. required fields are: {', '.join(self._valid_fields)}"
+            )
+        self.username = data["username"]
+        self.password = data["password"]
+        self.domain = data["domain"]
+        self.ip_addresses = data["ip_addresses"]
+
+
 class StratoClient:
     """
     Client class for Strato DynDNS. For DynDNS operations,
