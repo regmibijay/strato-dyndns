@@ -1,5 +1,6 @@
-from ..lib import requests_wrapper as _requests
 import socket
+
+from ..lib import requests_wrapper as _requests
 
 
 class ClientConnectException(Exception):

@@ -13,7 +13,6 @@ except ImportError:  # PY2
     class urllib:
         import urlparse as parse
 
-
 import requests
 import requests.adapters
 import urllib3
@@ -250,32 +249,32 @@ session = Session
 
 # Import other `requests` stuff to make the top-level API of this more compatible
 from requests import (
-    __title__,
-    __description__,
-    __url__,
-    __version__,
-    __build__,
+    ConnectionError,
+    ConnectTimeout,
+    FileModeWarning,
+    HTTPError,
+    PreparedRequest,
+    ReadTimeout,
+    Request,
+    RequestException,
+    Response,
+    Timeout,
+    TooManyRedirects,
+    URLRequired,
     __author__,
     __author_email__,
-    __license__,
-    __copyright__,
+    __build__,
     __cake__,
-    exceptions,
-    utils,
-    packages,
+    __copyright__,
+    __description__,
+    __license__,
+    __title__,
+    __url__,
+    __version__,
     codes,
-    Request,
-    Response,
-    PreparedRequest,
-    RequestException,
-    Timeout,
-    URLRequired,
-    TooManyRedirects,
-    HTTPError,
-    ConnectionError,
-    FileModeWarning,
-    ConnectTimeout,
-    ReadTimeout,
+    exceptions,
+    packages,
+    utils,
 )
 
 

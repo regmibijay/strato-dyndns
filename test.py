@@ -1,5 +1,5 @@
-from strato_dyndns.clients import StratoClient
-from strato_dyndns.clients import ConnectionHandler, DynDNSClient
+from strato_dyndns import DynDNSClient
+from strato_dyndns.clients import ConnectionHandler, StratoClient
 
 strato = StratoClient()
 

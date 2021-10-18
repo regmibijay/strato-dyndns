@@ -1,5 +1,5 @@
-from .strato_client import StratoClient, StratoClientInitData
 from ..lib import requests_wrapper as _requests
+from .strato_client import StratoClient, StratoClientInitData
 
 
 class DynDNSClientInitException(Exception):
