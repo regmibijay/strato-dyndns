@@ -1,7 +1,6 @@
 import os
 import sys
 from argparse import ArgumentParser
-from typing import DefaultDict
 
 from .clients import ConnectionHandler, DynDNSClient, DynDNSClientStatusException
 from .lib.file_operations import read_config
@@ -11,8 +10,15 @@ def check_if_not_empty(string: str) -> bool:
     """
     Checks if provided string is empty
     """
+    if type(string) == bool:
+        return False
+
+    if string is None:
+        return False
+
     if not string.replace(" ", "") == "":
         return True
+
     return False
 
 
@@ -58,6 +64,10 @@ def main(argv=sys.argv[1:]):
     args = parser.parse_args()
 
     # checking for CLI flags
+    if args.config is None:
+        args.config = False
+        CONFIG = False
+
     if (not args.config) and not (args.username or args.password or args.domain):
         print(
             """
@@ -76,16 +86,11 @@ def main(argv=sys.argv[1:]):
         )
         exit()
 
-    if not args.provider:
+    if not args.provider or not check_if_not_empty(args.provider):
         args.provider = "strato"
 
     if args.config and check_if_not_empty(args.config):
         CONFIG = handle_config(args.config)
-
-    if not check_if_not_empty(args.config):
-        print(f"`{args.config}` is not valid file path.")
-        print("Please specify proper config file path")
-        exit()
 
     if not (args.config) and (args.username or args.password or args.domain):
         CONFIG = {
@@ -94,17 +99,41 @@ def main(argv=sys.argv[1:]):
             "domain": args.domain,
             "ip_addresses": [],
         }
+
+    if not check_if_not_empty(args.config) and not CONFIG:
+        print(f"`{args.config}` is not valid file path.")
+        print("Please specify proper config file path")
+        exit()
+
     cnh = ConnectionHandler()
-    if not (args.config) and not (args.ip_addresses):
+    if not (args.config) and not (args.ip):
         if args.v4:
             CONFIG["ip_addresses"].append(cnh.get_ip_v4())
         if args.v6:
             CONFIG["ip_addresses"].append(cnh.get_ip_v6())
 
     if args.v4:
-        CONFIG["ip_addresses"].append(cnh.get_ip_v4())
+        ipv4 = cnh.get_ip_v4()
+        print(f"Obtained IPV4: `{ipv4}`")
+        CONFIG["ip_addresses"].append(ipv4)
     if args.v6:
-        CONFIG["ip_addresses"].append(cnh.get_ip_v6())
+        ipv6 = cnh.get_ip_v6()
+        print(f"Obtained IPV6: `{ipv6}`")
+        CONFIG["ip_addresses"].append()
+
+    if (args.v4 is None) and (args.v6 is None):
+        print(
+            """
+        You did not explicitly specify a V4 or V6 address.
+        Both will be automatically determined.
+        """
+        )
+        ipv4 = cnh.get_ip_v4()
+        print(f"Obtained IPV4: `{ipv4}`")
+        CONFIG["ip_addresses"].append(ipv4)
+        ipv6 = cnh.get_ip_v6()
+        print(f"Obtained IPV6: `{ipv6}`")
+        CONFIG["ip_addresses"].append(ipv6)
 
     dyndns = DynDNSClient(provider=args.provider)
     dyndns.init_data(data=CONFIG)
