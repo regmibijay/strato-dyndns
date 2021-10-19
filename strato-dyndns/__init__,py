@@ -1,2 +1,0 @@
-from .strato-dyndns import createDnsUpdateRequest
-from .strato-dyndns import analyzeCurlOutput

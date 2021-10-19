@@ -14,7 +14,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -131,3 +130,4 @@ dmypy.json
 #config.conf development data
 config*.conf
 config.conf
+config.json
