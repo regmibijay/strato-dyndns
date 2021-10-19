@@ -53,10 +53,13 @@ def main(argv=sys.argv[1:]):
     parser.add_argument("-p", "--password", help="Password", nargs="?", const=True)
     parser.add_argument("-d", "--domain", help="Domain", nargs="?", const=True)
     parser.add_argument(
-        "-ip", "--ip", help="IP Addresses separated by space", nargs="+"
+        "-ip",
+        "--ip",
+        help="IP Addresses separated by space, use -v4 -v6 if IP should be determined automatically",
+        nargs="+",
     )
     parser.add_argument(
-        "-v4", help="Whether IPV4 should be updated", nargs="?", const=True
+        "-v4", help="Whether IPV4 should be updated.", nargs="?", const=True
     )
     parser.add_argument(
         "-v6", help="Whether IPV6 should be updated", nargs="?", const=True
