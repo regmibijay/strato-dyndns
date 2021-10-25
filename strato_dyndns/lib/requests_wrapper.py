@@ -248,34 +248,13 @@ session = Session
 
 
 # Import other `requests` stuff to make the top-level API of this more compatible
-from requests import (
-    ConnectionError,
-    ConnectTimeout,
-    FileModeWarning,
-    HTTPError,
-    PreparedRequest,
-    ReadTimeout,
-    Request,
-    RequestException,
-    Response,
-    Timeout,
-    TooManyRedirects,
-    URLRequired,
-    __author__,
-    __author_email__,
-    __build__,
-    __cake__,
-    __copyright__,
-    __description__,
-    __license__,
-    __title__,
-    __url__,
-    __version__,
-    codes,
-    exceptions,
-    packages,
-    utils,
-)
+from requests import (ConnectionError, ConnectTimeout, FileModeWarning,
+                      HTTPError, PreparedRequest, ReadTimeout, Request,
+                      RequestException, Response, Timeout, TooManyRedirects,
+                      URLRequired, __author__, __author_email__, __build__,
+                      __cake__, __copyright__, __description__, __license__,
+                      __title__, __url__, __version__, codes, exceptions,
+                      packages, utils)
 
 
 # Re-implement the top-level “session-less” API

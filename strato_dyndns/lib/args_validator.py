@@ -1,7 +1,7 @@
-from .file_operations import read_config, write_config
-from ..clients import ConnectionHandler
-
 from typing import DefaultDict
+
+from ..clients import ConnectionHandler
+from .file_operations import read_config, write_config
 
 
 class ArgsValidator:
