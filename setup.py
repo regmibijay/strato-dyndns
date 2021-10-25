@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="strato_dyndns",
-    version="2.0.0",
+    version="2.1.0",
     packages=setuptools.find_packages(),
     url="https://github.com/regmibijay/strato-dyndns",
     license="GNU (GPLv3)",
@@ -14,7 +14,7 @@ setuptools.setup(
     author="Bijay Regmi",
     author_email="strato-dyndns@regdelivery.de",
     description="Updates your DNS records on Strato DNS.",
-    install_requires=[],
+    install_requires=["requests"],
     entry_points={
         "console_scripts": [
             "strato_dyndns=strato_dyndns.main:main",
