@@ -43,11 +43,13 @@ def main(argv=sys.argv[1:]):
         dyndns.update_record()
         print("Update request successful.")
     except DynDNSClientStatusException as e:
+        print("==========")
         print(f"Error updating record: {str(e)}")
+        print("==========")
     finally:
         print(
             """
-        For any errors you encountered or suggestion that came to your mind
+        \nFor any errors you encountered or suggestion that came to your mind
         during usage of this script, please report it to 
         \nhttps://github.com/regmibijay/strato-dyndns/\n
         Thank you!"""
