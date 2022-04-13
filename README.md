@@ -52,7 +52,7 @@ While this script itself does not YET support chronic executions, scheduling upd
 #open cronjobs in editing mode
 $ crontab -e  
 #add strato-dyndns to list
-10 10 * * 1 strato-dyndns -c config.conf -v4 -v6
+10 10 * * 1 strato_dyndns strato -c config.conf -v4 -v6
 #this would update your DNS records at 10:10 am every week.
 ```
 
