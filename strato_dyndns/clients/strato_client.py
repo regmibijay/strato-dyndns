@@ -98,3 +98,36 @@ class StratoClient:
         Returns update path in plain single line string.
         """
         return "".join(self.UPDATE_URL.replace("  ", "").splitlines())
+
+
+class StratoOutputAnalyzer:
+    """
+    Analyzes output from Strato DynDNS service.
+    """
+
+    _POSSIBLE_RESPONSES = {
+        "badauth": "Server stated authentification data was not correct, please check and try again later.",
+        "good": "IP update completed successfully, new ip was successfully written to DNS records.",
+        "nochg": "IP update completed successfully, yet no changes were made.",
+        "notfqdn": "The hostname specified is not a fully-qualified domain name (not in the form hostname.dyndns.org or domain.com).",
+        "nohost": "The hostname specified does not exist in this user account (or is not in the service specified in the system parameter).",
+        "numhost": "Too many hosts (more than 20) specified in an update. Also returned if trying to update a round robin (which is not allowed).",
+        "abuse": "The hostname specified is blocked for update abuse.",
+        "badagent": "The user agent was not sent or HTTP method is not permitted (we recommend use of GET request method).",
+        "dnserr": "DNS error encountered.",
+        "911": "There is a problem or scheduled maintainance on Servers.",
+    }
+    OUTPUT: str
+
+    STATUS: str
+    RESPONSE: str
+
+    def __init__(self, output: str) -> None:
+        self.OUTPUT = output.strip().split(" ")[0]
+
+    def analyze(self) -> str:
+        self.STATUS = "ERROR"
+        try:
+            self.RESPONSE = self._POSSIBLE_RESPONSES[self.OUTPUT]
+        except KeyError:
+            self.RESPONSE = "Unknown response received."
