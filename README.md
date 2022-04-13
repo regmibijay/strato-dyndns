@@ -12,6 +12,10 @@ designed for Strato.
 * This tool is in no way associated with [Strato AG](https://strato.de).
 * You use this tool at your own sole responsibility.
 
+## Currently Supported Registrars
+- Strato
+- Namecheap
+
 ## Installation
 
 To install this tool, please download a suited version for your operating system from [releases](https://github.com/regmibijay/strato-dyndns/releases) page of github repository of this project. Alternatively, you can install it via pip:
@@ -31,7 +35,7 @@ Command Line Option | Function
 ```-v6``` | specifies to update IPv6 records
 
 ## Python (3.6+) Library Documentation
-The `DynDNSClient` library was written with importablity in mind. Documentation will be released soon.
+The `DynDNSClient` library was written with importablity in mind. Full documentation to be found [here.](https://regdelivery.de/strato-dyndns)
  
 ## Quality of Life (QoL)
 For QoL, this tool offers a functionality to read parameters from a config file.
@@ -42,10 +46,11 @@ A configuration file needs to be in JSON Format and needs to contain mandatory p
 {
   "username": "maindomain.de",
   "password": "S00p3rS3cur3_!",
-  "domain": "subdomain.maindomain.de",
-  "ip_addresses": []
+  "domain": "subdomain.maindomain.de"
 }
 ```
+Please take into consideration that `username` for a Namecheap domain is actually the domain itself and `domain` is either  `@` or `www` etc. For more info about this, please read [this](https://www.namecheap.com/support/knowledgebase/article.aspx/29/11/how-to-dynamically-update-the-hosts-ip-with-an-http-request/) document.
+
 ### 2. Automation
 While this script itself does not YET support chronic executions, scheduling updates are indeed possible with tools like ```crontab``` e.g.
 ```
@@ -55,6 +60,10 @@ $ crontab -e
 10 10 * * 1 strato_dyndns strato -c config.conf -v4 -v6
 #this would update your DNS records at 10:10 am every week.
 ```
+
+### To-Do
+- add a block scheduler for own scheduling mechanism
+- add other domain registrars 
 
 ## Contributions
 Any contribution to this tool are welcome. Any pull request, bug or issue reporting will be addressed as soon as possible.
