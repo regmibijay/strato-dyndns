@@ -2,6 +2,7 @@
 
 [![Join the chat at https://gitter.im/strato-dyndns/community](https://badges.gitter.im/strato-dyndns/community.svg)](https://gitter.im/strato-dyndns/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ![Build status](https://github.com/regmibijay/strato-dyndns/actions/workflows/main.yml/badge.svg)
+[![Downloads](https://static.pepy.tech/personalized-badge/strato-dyndns?period=total&units=international_system&left_color=black&right_color=green&left_text=Downloads)](https://pepy.tech/project/strato-dyndns)o-dyndns)
 
 
 Strato-DynDNS updates your website's DNS records on DNS servers. Originally
