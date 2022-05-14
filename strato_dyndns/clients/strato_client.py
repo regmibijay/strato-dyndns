@@ -126,8 +126,8 @@ class StratoOutputAnalyzer:
         self.OUTPUT = output.strip().split(" ")[0]
 
     def analyze(self) -> str:
-        self.STATUS = "ERROR"
         try:
             self.RESPONSE = self._POSSIBLE_RESPONSES[self.OUTPUT]
         except KeyError:
+            self.STATUS = "ERROR"
             self.RESPONSE = "Unknown response received."
