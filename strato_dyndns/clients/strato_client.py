@@ -127,6 +127,7 @@ class StratoOutputAnalyzer:
 
     def analyze(self) -> str:
         try:
+            self.STATUS = "OK"
             self.RESPONSE = self._POSSIBLE_RESPONSES[self.OUTPUT]
         except KeyError:
             self.STATUS = "ERROR"
