@@ -17,7 +17,10 @@ class ConnectionHandler:
 
     _EXTERAL_API_URL: str
 
-    def __init__(self, external_server: str = "https://regdelivery.de:443/ip-api"):
+    def __init__(
+        self,
+        external_server: str = "https://regdelivery.de:443/ip-api?src=stratodyndns",
+    ):
         self._EXTERAL_API_URL = external_server
 
     def get_ip_v4(self):
