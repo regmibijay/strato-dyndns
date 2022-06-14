@@ -126,9 +126,12 @@ class StratoOutputAnalyzer:
         self.OUTPUT = output.strip().split(" ")[0]
 
     def analyze(self) -> str:
-        try:
+        if "nochg" in self.OUTPUT or "good" in self.OUTPUT:
             self.STATUS = "OK"
             self.RESPONSE = self._POSSIBLE_RESPONSES[self.OUTPUT]
-        except KeyError:
+        else:
             self.STATUS = "ERROR"
-            self.RESPONSE = "Unknown response received."
+            try:
+                self.RESPONSE = self._POSSIBLE_RESPONSES[self.OUTPUT]
+            except KeyError:
+                self.RESPONSE = "Unknown response received from dyndns server."
