@@ -3,6 +3,7 @@
 [![Join the chat at https://gitter.im/strato-dyndns/community](https://badges.gitter.im/strato-dyndns/community.svg)](https://gitter.im/strato-dyndns/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ![Build status](https://github.com/regmibijay/strato-dyndns/actions/workflows/main.yml/badge.svg)
 [![Downloads](https://static.pepy.tech/personalized-badge/strato-dyndns?period=total&units=international_system&left_color=black&right_color=green&left_text=Downloads)](https://pepy.tech/project/strato-dyndns)
+[![Total API Usage](https://regdelivery.de/github/dyndns-badge)](https://regdelivery.de/stratodyndns.json)
 
 
 Strato-DynDNS updates your website's DNS records on DNS servers. Originally
@@ -12,6 +13,7 @@ designed for Strato.
 
 * This tool is in no way associated with [Strato AG](https://strato.de).
 * You use this tool at your own sole responsibility.
+* To fetch external IPV4 and IPV6 Addresses, this library uses a simple PHP endpoint written and hosted by myself. No data about users IP is stored or processed by me except for amount of usage of API which can be seen [here](https://regdelivery.de/stratodyndns.json) publicly. However, logging of your IP address might still be done by Cloud Service Provider. If you do not want this, you can supply own API endpoint which returns pure IP address as response. See below in docs.
 
 ## Currently Supported Registrars
 - Strato
