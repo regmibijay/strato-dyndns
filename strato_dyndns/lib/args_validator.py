@@ -1,7 +1,7 @@
 from typing import DefaultDict
 
 from ..clients import ConnectionHandler
-from .file_operations import read_config, write_config
+from .file_operations import read_config
 
 
 class ArgsValidator:
@@ -55,6 +55,7 @@ class ArgsValidator:
             if self.ARG.ip:
                 self.CONFIG["ip_addresses"] = self.ARG.ip
             if not self.ARG.ip:
+                self.CONFIG["ip_addresses"] = []
                 if self.ARG.v4 is True:
                     self.CONFIG["ip_addresses"].append(self.CNH.get_ip_v4())
                 if self.ARG.v4 and self.ARG.v4 is not True:
