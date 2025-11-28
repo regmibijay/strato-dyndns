@@ -1,4 +1,6 @@
-from typing import DefaultDict
+import sys
+from argparse import Namespace
+from typing import Any
 
 from ..clients import ConnectionHandler
 from .file_operations import read_config
@@ -11,102 +13,93 @@ class ArgsValidator:
     `ArgumentParser`.
     """
 
-    ARG: dict
-    CONFIG: dict = DefaultDict()
-    CNH: ConnectionHandler
-
-    def __init__(self, arg) -> None:
-        self.ARG = arg
-        self.CNH = ConnectionHandler()
+    def __init__(self, arg: Namespace) -> None:
+        self._arg = arg
+        self._connection_handler = ConnectionHandler()
+        self._config: dict[str, Any] = {}
         try:
-            self.config()
+            self._parse_config()
         except Exception as e:
-            print("Could not process your parameters, reason:", str(e))
-            exit()
+            print(f"Could not process your parameters, reason: {e}")
+            sys.exit(1)
 
-    def is_valid_string(self, object) -> bool:
-        if object is None:
+    def _is_valid_string(self, value: Any) -> bool:
+        """Check if value is a valid non-empty string."""
+        if value is None or isinstance(value, bool):
             return False
-        if type(object) == bool:
-            return False
-        if isinstance(object, list):
-            if not all([self.is_valid_string(x) for x in object]):
-                return False
-        if object.replace(" ", "") == "":
-            return False
-        return True
+        if isinstance(value, list):
+            return all(self._is_valid_string(x) for x in value)
+        return bool(str(value).strip())
 
-    def validate_config(self, config: dict) -> dict:
-        valid_keys = ["username", "password", "domain"]
-        if not all([key in config.keys() for key in valid_keys]):
+    def _validate_config(self, config: dict) -> dict:
+        """Validate that config contains required keys."""
+        required_keys = ["username", "password", "domain"]
+        if not all(key in config for key in required_keys):
             print("Config file did not contain some required fields.")
-            exit()
+            sys.exit(1)
         return config
 
-    def config(self):
-        if self.ARG.config:
-            self.CONFIG = self.validate_config(read_config(self.ARG.config))
-            if self.ARG.username and self.is_valid_string(self.ARG.username):
-                self.CONFIG["username"] = self.ARG.username
-            if self.ARG.password and self.is_valid_string(self.ARG.password):
-                self.CONFIG["password"] = self.ARG.password
-            if self.ARG.domain and self.is_valid_string(self.ARG.domain):
-                self.CONFIG["domain"] = self.ARG.domain
-            if self.ARG.ip:
-                self.CONFIG["ip_addresses"] = self.ARG.ip
-            if not self.ARG.ip:
-                self.CONFIG["ip_addresses"] = []
-                if self.ARG.v4 is True:
-                    self.CONFIG["ip_addresses"].append(self.CNH.get_ip_v4())
-                if self.ARG.v4 and self.ARG.v4 is not True:
-                    self.CONFIG["ip_addresses"].append(self.ARG.v4)
-                if self.ARG.v6 is True:
-                    self.CONFIG["ip_addresses"].append(self.CNH.get_ip_v6())
-                if self.ARG.v6 and self.ARG.v6 is not True:
-                    self.CONFIG["ip_addresses"].append(self.ARG.v6)
-                if self.ARG.v4 is None and self.ARG.v6 is None:
-                    print(
-                        """
-                    No IP Adressses provided and no -v4 or -v6 flag set. 
-                    Script will not determine interfaces automatically. Please
-                    specify either interface.
-                    """
-                    )
-                    exit()
+    def _get_ip_addresses(self, print_detection: bool = False) -> list[str]:
+        """Determine IP addresses from arguments or by detection."""
+        ip_addresses: list[str] = []
+
+        if self._arg.v4 is True:
+            if print_detection:
+                print("Determining external ipv4")
+            ip_addresses.append(self._connection_handler.get_ip_v4())
+        elif self._arg.v4:
+            ip_addresses.append(self._arg.v4)
+
+        if self._arg.v6 is True:
+            if print_detection:
+                print("Determining external ipv6")
+            ip_addresses.append(self._connection_handler.get_ip_v6())
+        elif self._arg.v6:
+            ip_addresses.append(self._arg.v6)
+
+        if self._arg.v4 is None and self._arg.v6 is None:
+            print(
+                "No IP Addresses provided and no -v4 or -v6 flag set. "
+                "Script will not determine interfaces automatically. "
+                "Please specify either interface."
+            )
+            sys.exit(1)
+
+        return ip_addresses
+
+    def _parse_config(self) -> None:
+        """Parse and validate configuration from arguments or config file."""
+        if self._arg.config:
+            self._config = self._validate_config(read_config(self._arg.config))
+            # Override config values with command line arguments if provided
+            if self._arg.username and self._is_valid_string(self._arg.username):
+                self._config["username"] = self._arg.username
+            if self._arg.password and self._is_valid_string(self._arg.password):
+                self._config["password"] = self._arg.password
+            if self._arg.domain and self._is_valid_string(self._arg.domain):
+                self._config["domain"] = self._arg.domain
+
+            if self._arg.ip:
+                self._config["ip_addresses"] = self._arg.ip
+            else:
+                self._config["ip_addresses"] = self._get_ip_addresses()
         else:
-            if not self.ARG.username or not self.ARG.password or not self.ARG.domain:
+            if not all([self._arg.username, self._arg.password, self._arg.domain]):
                 print(
-                    """
-                Neither config nor proper authentication details were provided. Please provide
-                either with -c or -u, -p, -d.
-                """
+                    "Neither config nor proper authentication details were provided. "
+                    "Please provide either with -c or -u, -p, -d."
                 )
-                exit()
+                sys.exit(1)
 
-            self.CONFIG["username"] = self.ARG.username
-            self.CONFIG["password"] = self.ARG.password
-            self.CONFIG["domain"] = self.ARG.domain
-            self.CONFIG["ip_addresses"] = []
-            if not self.ARG.ip:
-                if self.ARG.v4 is True:
-                    print("Determining external ipv4")
-                    self.CONFIG["ip_addresses"].append(self.CNH.get_ip_v4())
-                if self.ARG.v4 and self.ARG.v4 is not True:
-                    self.CONFIG["ip_addresses"].append(self.ARG.v4)
-                if self.ARG.v6 is True:
-                    print("Determining external ipv6")
-                    self.CONFIG["ip_addresses"].append(self.CNH.get_ip_v6())
-                if self.ARG.v6 and self.ARG.v6 is not True:
-                    self.CONFIG["ip_addresses"].append(self.ARG.v6)
-                if self.ARG.v4 is None and self.ARG.v6 is None:
-                    print(
-                        """
-                    No IP Adressses provided and no -v4 or -v6 flag set. 
-                    Script will not determine interfaces automatically. Please
-                    specify either interface.
-                    """
-                    )
-                    exit()
+            self._config["username"] = self._arg.username
+            self._config["password"] = self._arg.password
+            self._config["domain"] = self._arg.domain
+            self._config["ip_addresses"] = (
+                self._arg.ip
+                if self._arg.ip
+                else self._get_ip_addresses(print_detection=True)
+            )
 
-    def config_in_dict(self):
-        return dict(self.CONFIG)
+    def config_in_dict(self) -> dict[str, Any]:
+        """Return configuration as a dictionary."""
+        return dict(self._config)

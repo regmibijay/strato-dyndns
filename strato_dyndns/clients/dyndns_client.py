@@ -1,3 +1,5 @@
+from typing import Any
+
 from ..lib import requests_wrapper as _requests
 from .namecheap_client import (
     NamecheapClient,
@@ -8,37 +10,27 @@ from .strato_client import StratoClient, StratoClientInitData, StratoOutputAnaly
 
 
 class DynDNSClientInitException(Exception):
-    """Exception class for DynDNS client initialization"""
+    """Exception class for DynDNS client initialization."""
 
-    def __init__(self, message: str):
-        super().__init__(message)
+    pass
 
 
 class DynDNSClientConnectException(Exception):
-    """Exception class for DynDNS client connection"""
+    """Exception class for DynDNS client connection."""
 
-    def __init__(self, message: str):
-        super().__init__(message)
+    pass
 
 
 class DynDNSClientStatusException(Exception):
-    """Exception class for DynDNS client result"""
+    """Exception class for DynDNS client result."""
 
-    def __init__(self, message: str):
-        super().__init__(message)
+    pass
 
 
 class DynDNSClient:
-    """
-    Standard DynDNS client for supported providers
-    """
+    """Standard DynDNS client for supported providers."""
 
-    _INSTANCE: None
-    _INSTANCE_DATA_INITIALIZER: None
-    _INSTANCE_OUTPUT_ANALYZER = None
-    _INSTANCE_TYPE: str
-    _INSTANCE_INIT: bool
-    _SUPPORTED_PROVIDERS = {
+    _SUPPORTED_PROVIDERS: dict[str, dict[str, Any]] = {
         "strato": {
             "client": StratoClient,
             "data": StratoClientInitData,
@@ -51,45 +43,42 @@ class DynDNSClient:
         },
     }
 
-    def __init__(self, provider: str):
-        if provider not in self._SUPPORTED_PROVIDERS.keys():
+    def __init__(self, provider: str) -> None:
+        if provider not in self._SUPPORTED_PROVIDERS:
             raise DynDNSClientInitException(f"{provider} is not supported")
-        self._INSTANCE = self._SUPPORTED_PROVIDERS[provider]["client"]()
-        self._INSTANCE_TYPE = provider
-        self._INSTANCE_DATA_INITIALIZER = self._SUPPORTED_PROVIDERS[provider]["data"]
-        self._INSTANCE_OUTPUT_ANALYZER = self._SUPPORTED_PROVIDERS[provider]["output"]
+        self._provider_config = self._SUPPORTED_PROVIDERS[provider]
+        self._instance = self._provider_config["client"]()
+        self._provider_type = provider
+        self._data_initializer = self._provider_config["data"]
+        self._output_analyzer = self._provider_config["output"]
+        self._is_initialized = False
 
-    def init_data(self, data: dict):
+    def init_data(self, data: dict[str, Any]) -> None:
         """
-        Expects init data needed for provider backend.
-        `username`, `password`, `domain`, `ip_addresses`
+        Initialize with data needed for provider backend.
+        Required keys: `username`, `password`, `domain`, `ip_addresses`
         """
-
-        data = self._INSTANCE_DATA_INITIALIZER(data)
-        self._INSTANCE.set_authentication(
-            username=data.username, password=data.password
+        init_data = self._data_initializer(data)
+        self._instance.set_authentication(
+            username=init_data.username, password=init_data.password
         )
-        self._INSTANCE.set_domain(data.domain)
-        self._INSTANCE.set_ip_addresses(ip_addresses=data.ip_addresses)
-        self._INSTANCE_INIT = True
+        self._instance.set_domain(init_data.domain)
+        self._instance.set_ip_addresses(ip_addresses=init_data.ip_addresses)
+        self._is_initialized = True
 
     def update_record(self) -> str:
-        """
-        Sends update request to provider and returns update response
-        """
-        if not self._INSTANCE_INIT:
+        """Send update request to provider and return update response."""
+        if not self._is_initialized:
             raise DynDNSClientInitException(
-                "trying to update record before backend was initialized"
+                "Trying to update record before backend was initialized"
             )
-        resp = _requests.get(self._INSTANCE.update_url()).text
-        return self.analyze_output(resp)
+        response = _requests.get(self._instance.update_url()).text
+        return self._analyze_output(response)
 
-    def analyze_output(self, output: str) -> str:
-        """
-        Analyzes output from DynDNS server.
-        """
-        analyzer = self._INSTANCE_OUTPUT_ANALYZER(output)
+    def _analyze_output(self, output: str) -> str:
+        """Analyze output from DynDNS server."""
+        analyzer = self._output_analyzer(output)
         analyzer.analyze()
-        if analyzer.STATUS == "ERROR":
-            raise DynDNSClientStatusException(analyzer.RESPONSE)
-        return analyzer.RESPONSE
+        if analyzer.status == "ERROR":
+            raise DynDNSClientStatusException(analyzer.response)
+        return analyzer.response

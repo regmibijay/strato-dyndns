@@ -5,7 +5,11 @@ from .clients import DynDNSClient, DynDNSClientStatusException
 from .lib.args_validator import ArgsValidator
 
 
-def main(argv=sys.argv[1:]):
+def main(argv: list[str] | None = None) -> None:
+    """Main entry point for the strato-dyndns CLI."""
+    if argv is None:
+        argv = sys.argv[1:]
+
     parser = ArgumentParser(description="Main executable")
     parser.add_argument(
         "-c",
@@ -21,38 +25,37 @@ def main(argv=sys.argv[1:]):
     parser.add_argument(
         "-ip",
         "--ip",
-        help="IP Addresses separated by space, use -v4 -v6 if IP should be determined automatically",
+        help="IP Addresses separated by space, use -v4 -v6 to determine automatically",
         nargs="+",
     )
     parser.add_argument(
-        "-v4", help="Whether IPV4 should be updated.", nargs="?", const=True
+        "-v4", help="Whether IPv4 should be updated", nargs="?", const=True
     )
     parser.add_argument(
-        "-v6", help="Whether IPV6 should be updated", nargs="?", const=True
+        "-v6", help="Whether IPv6 should be updated", nargs="?", const=True
     )
-    args = parser.parse_args()
-    CONFIG = ArgsValidator(arg=args).config_in_dict()
+    args = parser.parse_args(argv)
+
+    config = ArgsValidator(arg=args).config_in_dict()
     dyndns = DynDNSClient(provider=args.provider)
-    dyndns.init_data(data=CONFIG)
+    dyndns.init_data(data=config)
+
     try:
-        print("Username:", CONFIG["username"])
-        print("Domain:", CONFIG["domain"])
-        print("IP(s):")
-        print(*CONFIG["ip_addresses"])
-        print("\rTrying to update records", sep="")
+        print(f"Username: {config['username']}")
+        print(f"Domain: {config['domain']}")
+        print("IP(s):", *config["ip_addresses"])
+        print("Trying to update records...")
         dyndns.update_record()
         print("Update request successful.")
     except DynDNSClientStatusException as e:
-        print("==========")
-        print(f"Error updating record: {str(e)}")
-        print("==========")
+        print("=" * 40)
+        print(f"Error updating record: {e}")
+        print("=" * 40)
     finally:
         print(
-            """
-        \nFor any errors you encountered or suggestion that came to your mind
-        during usage of this script, please report it to 
-        \nhttps://github.com/regmibijay/strato-dyndns/\n
-        Thank you!"""
+            "\nFor any errors you encountered or suggestions, please report at:"
+            "\nhttps://github.com/regmibijay/strato-dyndns/"
+            "\nThank you!"
         )
 
 
